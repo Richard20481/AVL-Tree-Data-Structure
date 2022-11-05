@@ -13,12 +13,6 @@
  */
 #include "../Headers/avl.h"
 
-/**
- * https://www.youtube.com/watch?v=A3JZinzkMpk
- * https://en.wikipedia.org/wiki/Tree_rotation
- * https://en.wikipedia.org/wiki/Tree_rotation#/media/File:Tree_Rebalancing.gif
- */
-
 /*
  * Main function.
  */
