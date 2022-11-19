@@ -1,6 +1,5 @@
 /**
- * Author: Richard.G
- * Discription: 
+ * 
  */
 
 /**
@@ -13,6 +12,12 @@
  */
 #include "../Headers/avl.h"
 
+/**
+ * https://www.youtube.com/watch?v=A3JZinzkMpk
+ * https://en.wikipedia.org/wiki/Tree_rotation
+ * https://en.wikipedia.org/wiki/Tree_rotation#/media/File:Tree_Rebalancing.gif
+ */
+
 /*
  * Main function.
  */
@@ -22,24 +27,23 @@ int main(int argn, char* argv[]){
     int32_t a = 0;
 
     AVL_Tree tree;
+    AVL_ini(&tree, sizeof(int));
 
-    tree.n_ptr = NULL;
-    tree.n = 0;
-    tree.s = sizeof(int);
 
-    
+    AVL_insert(&tree.n_ptr, 30);
+    AVL_insert(&tree.n_ptr, 40);
+    AVL_insert(&tree.n_ptr, 50);
+    AVL_insert(&tree.n_ptr, 60);
+    AVL_insert(&tree.n_ptr, 70);
 
-    a = 10;
-    err = AVL_insert(&tree, a, &a);
+    AVL_insert(&tree.n_ptr, 20);
+    AVL_insert(&tree.n_ptr, 10);
 
-    a = 15;
-    err = AVL_insert(&tree, a, &a);
+    AVL_insert(&tree.n_ptr, 80);
+    AVL_insert(&tree.n_ptr, 90);
+    AVL_insert(&tree.n_ptr, 100);
 
-    a = 5;
-    err = AVL_insert(&tree, a, &a);
+    AVL_print(tree.n_ptr);
 
-    printf("\n[%d]", AVL_contains(&tree, 5));
-    AVL_print(&tree);
-    
     return 0;
 }

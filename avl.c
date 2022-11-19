@@ -1,5 +1,4 @@
 /**
- * Author: Richard.G
  * AVL tree data structure library.
  */
 
@@ -10,13 +9,17 @@
  * C standard library header files.
  */
 #include <stdio.h>
-#include <stdint.h>
+#include <stdint.h> 
 
 /**
  * Programmer defiend header files.
  */
 #include "../Headers/avl.h"
-#include "../Headers/node.h"
+
+/**
+ * 
+ */
+#define AVL_NODESIZE (sizeof(struct avl_node))
 
 /**
  * If using the C implomentation,
@@ -25,157 +28,239 @@
 #ifndef __cplusplus
 
 /**
- * 
+ * Error macros. 
  */
-void avl_print(struct node* n_ptr){
+#define INVALIDPERAMITER -1
+#define FAILEDTOALLOCATE -2
+
+/**
+ * Prints the AVL tree to the termianl in middle,left,right(MLR) form.
+ */
+void AVL_print(struct avl_node* n_ptr){
 
     if(n_ptr){
 
-        printf("\n(%ld)", n_ptr->key);
-        avl_print(n_ptr->l_ptr);
-        avl_print(n_ptr->r_ptr);
+        printf("\n(%ld)::::(h= %ld)", n_ptr->key, n_ptr->h);
+        AVL_print(n_ptr->l_ptr);
+        AVL_print(n_ptr->r_ptr);
     }
 }
 
 /**
- * 
+ * Creates the new AVL tree.
  */
-void AVL_print(AVL_Tree* tree){
+int8_t AVL_ini(AVL_Tree* tree, const size_t size){
 
-    printf("\nNumber of nodes is %lu", tree->n);
-    printf("\nSize of node is (%lu)bytes.", tree->s);
-    printf("\nTotal memory used is (%lu)bytes.\n", (tree->n * tree->s) + sizeof(struct avl));
+    /**
+     * Peramiter validation.
+     */
+    if(!tree) return INVALIDPERAMITER;
+    if(tree->n_ptr) return INVALIDPERAMITER;
+    if(!size) return INVALIDPERAMITER;
 
-    avl_print(tree->n_ptr);
+    /**
+     * Sets the tree's attributes to default values. 
+     */
+    tree->h = 0;
+    tree->n = 0;
+    tree->s = size;
+
+    tree->n_ptr = NULL;
+    return 0;
 }
 
 /**
- * Might make inline??
+ * Creates a new node with a key.
  */
-int8_t avl_insert(struct node** n_pptr, int64_t key, 
-void* d_ptr, const size_t size){
+int8_t AVL_node_ini(struct avl_node** n_pptr, int64_t key){
+
+    /**
+     * Peramiter validation.
+     */
+    if(*n_pptr) return INVALIDPERAMITER;
+    if(key < 0) return INVALIDPERAMITER;
+
+    /**
+     * Allocates memeory for the new node.
+     */
+    *n_pptr = (struct avl_node*)malloc(AVL_NODESIZE);
+    if(!*n_pptr) return FAILEDTOALLOCATE;
+
+    /**
+     * Sets the nodes attributes.
+     */
+    (*n_pptr)->key = key;
+    (*n_pptr)->h = 0x01;
+    return 0;
+}
+
+/**
+ * Right rotation.
+ */
+void* AVL_rr(struct avl_node* n_ptr){
 
     /**
      * 
      */
-    while(*n_pptr){
+    struct avl_node* t_ptr = NULL;
 
-        if((*n_pptr)->key < key){
+    /**
+     * Peramiter validation.
+     */
+    if(!n_ptr) return NULL;
+    if(!n_ptr->l_ptr) return NULL;
 
-            n_pptr = &(*n_pptr)->r_ptr;
-            continue;
-        }
+    /**
+     * Changes pointers.
+     */
+    t_ptr = n_ptr;
+    n_ptr = n_ptr->l_ptr;
 
-        n_pptr = &(*n_pptr)->l_ptr;
-    }
+    t_ptr->l_ptr = n_ptr->r_ptr;
+    n_ptr->r_ptr = t_ptr;
 
-    return ini_node(n_pptr, key, d_ptr, size);
+    t_ptr->h -= n_ptr->h;
+    return n_ptr;
+}
+
+/**
+ * Left rotation.
+ */
+void* AVL_lr(struct avl_node* n_ptr){
+
+    /**
+     * 
+     */
+    struct avl_node* t_ptr = NULL;
+
+    /**
+     * Peramiter validation.
+     */
+    if(!n_ptr) return NULL;
+    if(!n_ptr->r_ptr) return NULL;
+
+    /**
+     * Changes pointers.
+     */
+    t_ptr = n_ptr;
+    n_ptr = n_ptr->r_ptr;
+
+    t_ptr->r_ptr = n_ptr->l_ptr;
+    n_ptr->l_ptr = t_ptr;
+
+    t_ptr->h -=  n_ptr->h;
+    return n_ptr;
+}
+
+/**
+ * Left, right rotation.
+ */
+void* AVL_lrr(struct avl_node* n_ptr){
+
+    n_ptr->l_ptr = AVL_lr(n_ptr->l_ptr);
+    return AVL_rr(n_ptr);
+}
+
+/**
+ * Right, left rotation.
+ */
+void* AVL_rlr(struct avl_node* n_ptr){
+
+    n_ptr->r_ptr = AVL_rr(n_ptr->r_ptr);
+    return AVL_lr(n_ptr);
+}
+
+/**
+ * Get diffence in node height. 
+ */
+int64_t AVL_getBalance(struct avl_node* n_ptr){
+
+    if(!n_ptr) return 0;
+
+    int64_t hl = (!n_ptr->l_ptr) ? 0 : n_ptr->l_ptr->h;
+    int64_t hr = (!n_ptr->r_ptr) ? 0 : n_ptr->r_ptr->h;
+
+    return hl - hr;
 }
 
 /**
  * Inserts a new node into the tree.
- * (API Abstraction interface...)
  */
-int8_t AVL_insert(AVL_Tree* tree, int64_t key, void* d_ptr){ 
+int8_t AVL_insert(struct avl_node** n_pptr, int64_t key){
 
-    int8_t err = 0;
-
+    /**
+     * Create a new node if n_ptr is null.
+     */
+    if(!*n_pptr) return AVL_node_ini(n_pptr, key);
+    
     /**
      * 
      */
-    if(AVL_contains(tree, key)) return DUPLICATEKEY;
-    err = avl_insert(&tree->n_ptr, key, d_ptr, tree->s);
-
-    if(!err)tree->n++;
-    return err;
-}
-
-/**
- * Look for the data in the tree.
- * (API Abstraction interface...)
- */
-void* AVL_find(AVL_Tree* tree_ptr, int64_t key){
-
-    /**
-     * 
-     */
-    struct node* t_ptr = NULL;
-
-    /**
-     * 
-     */
-    if(!tree_ptr) return NULL;
-    if(!key) return NULL;
-
-    t_ptr = tree_ptr->n_ptr;
-
-    /**
-     * 
-     */
-    while(t_ptr){
-
-        //If the key match, return true.
-        if(key == t_ptr->key) return t_ptr;
+    if((*n_pptr)->key < key){
 
         /**
-         * Go to right node.
+         * Gose and add a new node to the right of the tree.
          */
-        if(t_ptr->key < key){
-            
-            t_ptr = t_ptr->r_ptr;
-            continue;
+        AVL_insert(&(*n_pptr)->r_ptr, key);
+        (*n_pptr)->h = ((*n_pptr)->h <= (*n_pptr)->r_ptr->h) ? ((*n_pptr)->r_ptr->h + 0x01) : (*n_pptr)->h;
+        
+        /**
+         * Right right case rotation is operation is perfromed.
+         */
+        if((AVL_getBalance(*n_pptr) < -1 ) && (key > (*n_pptr)->r_ptr->key)){
+
+            *n_pptr = AVL_lr(*n_pptr);
+            return 0;
         }
         
-        //Else the left node.
-        t_ptr = t_ptr->l_ptr;
+        /**
+         * Right left case rotation is operation is perfromed.
+         */
+        if((AVL_getBalance(*n_pptr) < -1 ) && (key < (*n_pptr)->r_ptr->key)) *n_pptr = AVL_rlr(*n_pptr);
+        return 0;
     }
 
-    return NULL;
-}
-
-/**
- * Look for the data in the tree.
- * (API Abstraction interface...)
- */
-int8_t AVL_contains(AVL_Tree* tree_ptr, const int64_t key){
+    /**
+     * Gose and add a new node to the left of the tree.
+     */
+    AVL_insert(&(*n_pptr)->l_ptr, key);
+    (*n_pptr)->h = ((*n_pptr)->h <= (*n_pptr)->l_ptr->h) ? ((*n_pptr)->l_ptr->h + 0x01) : (*n_pptr)->h;
 
     /**
-     * 
+     * Left left case rotation is operation is perfromed.
      */
-    if(!tree_ptr) return FAILEDTOVALIDATE;
-    if(!key) return FAILEDTOVALIDATE;
+    if((AVL_getBalance(*n_pptr) > 1 ) && (key < (*n_pptr)->l_ptr->key)){
 
+        *n_pptr = AVL_rr(*n_pptr);
+        return 0;
+    }
+        
     /**
-     * 
+     * Left right case rotation is operation is perfromed.
      */
-    if(AVL_find(tree_ptr, key)) return 0x01;
-    return 0x00;
-}
-
-/**
- * Merges two avl trees together into one tree.
- */
-int8_t AVL_merge(void){
-
+    if((AVL_getBalance(*n_pptr) > 1 ) && (key > (*n_pptr)->l_ptr->key)) *n_pptr = AVL_lrr(*n_pptr);
     return 0;
 }
 
 /**
- * Splits a avl tree into two smaller trees.
+ * Convert to list. 
  */
-int8_t AVL_split(void){
-
-    return 0;
-}
 
 /**
- * (API Abstraction interface...)
+ * Write this AVL tree to a file. 
  */
-int8_t AVL_remove(AVL_Tree tree, void* d_ptr){
 
+/**
+ * Read this AVL tree from a file. 
+ */
 
-    return 0;
-}
+/**
+ * Meage two AVL trees. 
+ */
+
+/**
+ * Split an AVL trees. 
+ */
 
 #endif
 
