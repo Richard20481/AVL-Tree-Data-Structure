@@ -74,7 +74,15 @@ int8_t AVL_ini(AVL_Tree* tree, const size_t size);
  */
 int8_t AVL_insert(struct avl_node** n_pptr, int64_t key);
 
+// /**
+//  * Inserts a new node into the tree with iteration.
+//  */
+// int8_t AVL_insert_i(struct avl_node** n_pptr, int64_t key);
 
+/**
+ * Write this AVL tree to a file. 
+ */
+int8_t AVL_write(const char* dir_ptr, AVL_Tree* tree_ptr);
 
 #endif
 

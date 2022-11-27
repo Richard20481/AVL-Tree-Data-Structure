@@ -34,7 +34,8 @@
 #define FAILEDTOALLOCATE -2
 
 /**
- * Prints the AVL tree to the termianl in middle,left,right(MLR) form.
+ * Prints the AVL tree to the termianl in middle,
+ * left,right(MLR) form.
  */
 void AVL_print(struct avl_node* n_ptr){
 
@@ -119,7 +120,7 @@ void* AVL_rr(struct avl_node* n_ptr){
     t_ptr->l_ptr = n_ptr->r_ptr;
     n_ptr->r_ptr = t_ptr;
 
-    t_ptr->h -= n_ptr->h;
+    t_ptr->h = n_ptr->h - 1;
     return n_ptr;
 }
 
@@ -148,7 +149,7 @@ void* AVL_lr(struct avl_node* n_ptr){
     t_ptr->r_ptr = n_ptr->l_ptr;
     n_ptr->l_ptr = t_ptr;
 
-    t_ptr->h -=  n_ptr->h;
+    t_ptr->h = n_ptr->h - 1;
     return n_ptr;
 }
 
@@ -242,13 +243,108 @@ int8_t AVL_insert(struct avl_node** n_pptr, int64_t key){
     return 0;
 }
 
+// /**
+//  * Inserts a new node into the tree with iteration.
+//  * (This is going to be a lot of work...)
+//  */
+// int8_t AVL_insert_i(struct avl_node** n_pptr, int64_t key){
+
+//     int64_t hl = 0;
+//     int64_t hr = 0;
+
+//     /**
+//      * Insert as a binary tree.
+//      */
+//     while(*n_pptr){
+
+//         (*n_pptr)->h++;
+
+//         hl = (!(*n_pptr)->l_ptr) ? 0 : (*n_pptr)->l_ptr->h;
+//         hr = (!(*n_pptr)->r_ptr) ? 0 : (*n_pptr)->r_ptr->h;
+
+//         /**
+//          * Gose left on the tree. 
+//          */
+//         if((*n_pptr)->key > key){
+
+//             // /**
+//             //  * Left left case rotation is operation is perfromed.
+//             //  * (works but the height is wrong!!!)
+//             //  */
+//             // if(((*n_pptr)->l_ptr && (key < (*n_pptr)->l_ptr->key)) && (((hl + 1) - hr) > 1)){
+
+//             //     //(*n_pptr)->l_ptr->h++;
+//             //     *n_pptr = AVL_rr(*n_pptr);
+//             // }
+
+//             n_pptr = &(*n_pptr)->l_ptr;
+//             continue;
+//         }
+
+//         n_pptr = &(*n_pptr)->r_ptr;
+//     }
+    
+//     AVL_node_ini(n_pptr, key);
+//     return 0;
+// }
+
 /**
- * Convert to list. 
+ * Convert to list.
  */
+
+int8_t AVL_get_at_height(struct avl_node* n_ptr, int64_t h){
+
+    if(!n_ptr) return -1;
+
+    if(n_ptr->h == h){
+
+        printf("\n[%ld]%ld)", n_ptr->h, n_ptr->key);
+        return 0;
+    }
+
+    AVL_get_at_height(n_ptr->l_ptr, h);
+    AVL_get_at_height(n_ptr->r_ptr, h);
+    return 0;
+}
 
 /**
  * Write this AVL tree to a file. 
  */
+int8_t AVL_write(const char* dir_ptr, AVL_Tree* tree_ptr){
+
+    /**
+     * 
+     */
+    int64_t h = 0;
+
+    /**
+     * 
+     */
+    if(!dir_ptr) return INVALIDPERAMITER;
+    if(!tree_ptr) return INVALIDPERAMITER;
+
+    /**
+     * Use binary tree for the insert...
+     */
+    h = tree_ptr->n_ptr->h;
+
+    while(h){
+
+        printf("\n");
+        AVL_get_at_height(tree_ptr->n_ptr, h);
+        h--;
+    }
+
+    return 0;
+}
+
+/**
+ * 
+ */
+void AVL_remove(struct avl_node* n_ptr, int64_t key){
+
+    
+}
 
 /**
  * Read this AVL tree from a file. 
